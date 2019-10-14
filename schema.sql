@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS sis (
+    session_token TEXT PRIMARY KEY,
+    a TEXT NOT NULL,
+    x TEXT NOT NULL,
+    c TEXT NOT NULL
+)WITHOUT ROWID;
+
