@@ -2,10 +2,11 @@ import requests
 import argparse
 from sis import SIS
 from ois import OIS
+from sss import SSS
 from utils import point_to_string
 from py_ecc import bls12_381 as bls
 
-implemented_protocols = ["sis", "ois"]
+implemented_protocols = ["sis", "ois", "sss"]
 
 def schnorr_is(url):
     sk, pk = SIS.keygen()
@@ -60,6 +61,26 @@ def okamoto_is(url):
     data = res.json()
     print(data)
 
+def schnorr_ss(url):
+    message = "Test"
+    sk, pk = SSS.keygen()
+    x, big_x = SSS.gen_commit()
+    c = SSS.gen_challenge(message, big_x)
+    s = SSS.calc_proof(sk, x, c)
+    verify_json = {
+        "protocol_name": "sss",
+        "payload": {
+            "s": str(s),
+            "A": point_to_string(pk),
+            "X": point_to_string(big_x),
+            "msg": message
+        }
+    }
+    res = requests.post(url=url + "/protocols/sss/verify", json=verify_json)
+    data = res.json()
+    print(data)
+
+
 def parse_arg():
     parser = argparse.ArgumentParser()
     parser.add_argument("--p", dest="protocol", choices=implemented_protocols, required=True)
@@ -69,6 +90,7 @@ def parse_arg():
 protocols = {
     "sis": schnorr_is,
     "ois": okamoto_is,
+    "sss": schnorr_ss
 }
 
 def main():

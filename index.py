@@ -3,18 +3,18 @@ from flasgger import Swagger, swag_from
 import secrets
 from sis import SIS
 from ois import OIS
+from sss import SSS
 import sqlite3
 from utils import string_to_point, generate_token, unpack
-
 
 DATABASE = 'base.db'
 
 app = Flask(__name__)
 swagger = Swagger(app)
 
-implemented_protocols = ["sis", "ois"]
+implemented_protocols = ["sis", "ois", "sss"]
 init_list = ["sis", "ois"]
-verify_list = ["sis", "ois"]
+verify_list = ["sis", "ois", "sss"]
 
 def schnorr_init(data):
     payload = data.get("payload")
@@ -58,8 +58,6 @@ def schnorr_verify(data):
             return jsonify({
                 "verified": answer
             }), 403
-        
-    return jsonify(answer)
 
 def okamoto_init(data):
     payload = data.get("payload")
@@ -105,8 +103,18 @@ def okamoto_verify(data):
                 "verified": answer
             }), 403
         
-    return jsonify(answer)
-
+def schnorr_signature_verify(data):
+    payload = data.get("payload")
+    msg = payload.get("msg")
+    A = string_to_point(payload.get("A"))
+    X = string_to_point(payload.get("X"))
+    s = int(payload.get("s"))
+    c = SSS.gen_challenge(msg, X)
+    answer = SSS.verify(A, X, c, s)
+    return jsonify({
+                "valid": answer
+            })
+            
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -129,6 +137,7 @@ init_protocols = {
 verify_protocols = {
     "sis": schnorr_verify,
     "ois": okamoto_verify,
+    "sss": schnorr_signature_verify,
 }
 
 @app.route('/protocols', methods=["GET"])
