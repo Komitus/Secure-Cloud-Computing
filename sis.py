@@ -16,8 +16,7 @@ class SIS:
     def keygen():
         sk = secrets.randbelow(SIS.q)
         pk = bls.multiply(SIS.g,sk)
-        return (sk, pk)
-    
+        return (sk, pk)    
     
     @staticmethod
     def gen_commit():

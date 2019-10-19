@@ -3,13 +3,64 @@ from flasgger import Swagger, swag_from
 import secrets
 from sis import SIS
 import sqlite3
-from utils import string_to_point
+from utils import string_to_point, generate_token, unpack
 
 
 DATABASE = 'base.db'
 
 app = Flask(__name__)
 swagger = Swagger(app)
+
+implemented_protocols = ["sis"]
+init_list = ["sis"]
+verify_list = ["sis"]
+
+
+def schnorr_init(data):
+    payload = data.get("payload")
+    A = payload.get("A")
+    X = payload.get("X")
+    token = generate_token()
+    c = SIS.gen_challenge()
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("insert into sis values (?, ?, ? ,?)", (token, A, X, str(c)))
+        db.commit()
+    response = {
+        "session_token": token, 
+        "payload": {
+            "c": str(c)
+        }
+    }
+    return jsonify(response)
+
+def schnorr_verify(data):
+    payload = data.get("payload")
+    token = data.get("session_token")
+    s = int(payload.get("s"))
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("select a, x, c from sis where session_token = ?", (token,))
+        row = cur.fetchone()
+        A = string_to_point(row[0])
+        X = string_to_point(row[1])
+        c = int(row[2])
+        cur.execute('DELETE FROM sis WHERE session_token = ?', (token,))
+        db.commit()
+        answer = SIS.verify(A, X, c, s)
+        if answer:
+            return jsonify({
+                "verified": answer
+            }), 200
+        else:
+            return jsonify({
+                "verified": answer
+            }), 403
+        
+    return jsonify(answer)
+
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -25,51 +76,33 @@ def init_db():
             db.cursor().executescript(contents)
         db.commit()
 
-@app.route('/protocols/<protocol>/init', methods=["POST"])
-@swag_from('/openapi/api.yaml')
+init_protocols = {
+    "sis": schnorr_init,
+}
+
+verify_protocols = {
+    "sis": schnorr_verify,
+}
+
+@app.route('/protocols')
+def protocol_list():
+    return jsonify({
+        "schemas": implemented_protocols
+    })
+
+@app.route(f'/protocols/<any({unpack(init_list)}):protocol>/init', methods=["POST"])
 def init(protocol):
-    if protocol == "sis":
-        data = request.json
-        A = data.get("payload").get("A")
-        X = data.get("payload").get("X")
-        token = secrets.token_hex(16)
-        c = SIS.gen_challenge() 
-        with app.app_context():
-            db = get_db()
-            cur = db.cursor()
-            cur.execute("insert into sis values (?, ?, ? ,?)", (token, A, X, str(c)))
-            db.commit()
-        response = {"session_token": token, "payload":{"c": str(c)}}
-        return jsonify(response)
-        
+    data = request.json
+    if protocol==data.get("protocol_name"):
+        return init_protocols[protocol](data)
 
-    return None
-
-@app.route('/protocols/<protocol>/verify', methods=["POST"])
-@swag_from('/openapi/api.yaml')
+@app.route(f'/protocols/<any({unpack(verify_list)}):protocol>/verify', methods=["POST"])
 def verify(protocol):
-    if protocol == "sis":
-        data = request.json
-        s = int(data.get("payload").get("s"))
-        token = data.get("session_token")
-        with app.app_context():
-            db = get_db()
-            cur = db.cursor()
-            cur.execute("select a, x, c from sis where session_token = ?", (token,))
-            row = cur.fetchone()
-            A = string_to_point(row[0])
-            X = string_to_point(row[1])
-            c = int(row[2])
-            cur.execute('DELETE FROM sis WHERE session_token = ?', (token,))
-            db.commit()
-            answer = SIS.verify(A, X, c, s)
-            if answer:
-                return jsonify({"verified": answer}), 200
-            else:
-                return jsonify({"verified": answer}), 403
-            
-        return jsonify(answer)
-
+    data = request.json
+    if protocol==data.get("protocol_name"):
+        return verify_protocols[protocol](data)
+    
+        
 if __name__ == '__main__':
     init_db()
     app.run(host="0.0.0.0", port=8080)
