@@ -2,6 +2,7 @@ from flask import Flask, escape, request, jsonify, g
 from flasgger import Swagger, swag_from
 import secrets
 from sis import SIS
+from ois import OIS
 import sqlite3
 from utils import string_to_point, generate_token, unpack
 
@@ -11,10 +12,9 @@ DATABASE = 'base.db'
 app = Flask(__name__)
 swagger = Swagger(app)
 
-implemented_protocols = ["sis"]
-init_list = ["sis"]
-verify_list = ["sis"]
-
+implemented_protocols = ["sis", "ois"]
+init_list = ["sis", "ois"]
+verify_list = ["sis", "ois"]
 
 def schnorr_init(data):
     payload = data.get("payload")
@@ -61,6 +61,51 @@ def schnorr_verify(data):
         
     return jsonify(answer)
 
+def okamoto_init(data):
+    payload = data.get("payload")
+    A = payload.get("A")
+    X = payload.get("X")
+    token = generate_token()
+    c = OIS.gen_challenge()
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("insert into ois values (?, ?, ? ,?)", (token, A, X, str(c)))
+        db.commit()
+    response = {
+        "session_token": token, 
+        "payload": {
+            "c": str(c)
+        }
+    }
+    return jsonify(response)
+
+def okamoto_verify(data):
+    payload = data.get("payload")
+    token = data.get("session_token")
+    s_1 = int(payload.get("s1"))
+    s_2 = int(payload.get("s2"))
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("select a, x, c from ois where session_token = ?", (token,))
+        row = cur.fetchone()
+        A = string_to_point(row[0])
+        X = string_to_point(row[1])
+        c = int(row[2])
+        cur.execute('DELETE FROM ois WHERE session_token = ?', (token,))
+        db.commit()
+        answer = OIS.verify(A, X, c, (s_1, s_2))
+        if answer:
+            return jsonify({
+                "verified": answer
+            }), 200
+        else:
+            return jsonify({
+                "verified": answer
+            }), 403
+        
+    return jsonify(answer)
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -78,13 +123,15 @@ def init_db():
 
 init_protocols = {
     "sis": schnorr_init,
+    "ois": okamoto_init,
 }
 
 verify_protocols = {
     "sis": schnorr_verify,
+    "ois": okamoto_verify,
 }
 
-@app.route('/protocols')
+@app.route('/protocols', methods=["GET"])
 def protocol_list():
     return jsonify({
         "schemas": implemented_protocols
