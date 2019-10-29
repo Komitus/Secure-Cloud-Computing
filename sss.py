@@ -1,7 +1,7 @@
 from py_ecc import bls12_381 as bls
 from hashlib import sha3_512
 import secrets
-from utils import point_to_string
+from utils import point_to_string_FQ
 
 class SSS:
     g = bls.G1
@@ -9,7 +9,7 @@ class SSS:
 
     @staticmethod
     def gen_challenge(m, X):
-        return int(sha3_512((m + point_to_string(X)).encode()).hexdigest(),16) % SSS.q
+        return int(sha3_512((m + point_to_string_FQ(X)).encode()).hexdigest(),16) % SSS.q
 
     @staticmethod
     def verify(A, X, c, s):
