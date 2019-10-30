@@ -1,5 +1,6 @@
 from py_ecc import bls12_381 as bls
 import secrets
+
 class SIS:
     g = bls.G1
     q = bls.curve_order

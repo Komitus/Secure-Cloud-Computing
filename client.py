@@ -3,14 +3,8 @@ import argparse
 import requests
 from py_ecc import bls12_381 as bls
 
-from blsss import BLSSS
-from msis import MSIS
-from ois import OIS
-from sis import SIS
-from sss import SSS
-from gjss import GJSS
-from naxos import NAXOS
-from utils import point_to_string_FQ, point_to_string_FQ2, string_to_point_FQ
+from schemas.protocols import BLSSS, MSIS, OIS, SIS, GJSS, NAXOS, SSS
+from schemas.utils import point_to_string_FQ, point_to_string_FQ2, string_to_point_FQ
 
 implemented_protocols = ["sis", "ois", "sss", "msis", "blsss", "gjss", "naxos"]
 

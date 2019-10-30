@@ -1,7 +1,7 @@
 from py_ecc import bls12_381 as bls
 from hashlib import sha3_512
 import secrets
-from utils import point_to_string_FQ
+from schemas.utils import point_to_string_FQ
 
 class SSS:
     g = bls.G1

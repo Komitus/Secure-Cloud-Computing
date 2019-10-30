@@ -1,6 +1,6 @@
 from py_ecc import bls12_381 as bls
 import secrets
-from utils import call_node, point_to_string_FQ, string_to_point_FQ2
+from schemas.utils import call_node, point_to_string_FQ, string_to_point_FQ2
 
 class BLSSS:
     g = bls.G1
@@ -15,7 +15,7 @@ class BLSSS:
     @staticmethod
     def gen_g2_generator(msg):
         payload = [f'{msg}']
-        return string_to_point_FQ2(call_node("msis.js", payload))
+        return string_to_point_FQ2(call_node("./schemas/protocols/hash_map_g2.js", payload))
         
     @staticmethod
     def compute_sigma(h, sk):

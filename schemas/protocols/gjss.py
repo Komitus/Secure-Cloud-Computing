@@ -3,7 +3,7 @@ from hashlib import sha3_512
 
 from py_ecc import bls12_381 as bls
 
-from utils import (call_node, point_to_string_FQ, point_to_string_FQ2,
+from schemas.utils import (call_node, point_to_string_FQ, point_to_string_FQ2,
                    string_to_point_FQ2)
 
 
@@ -24,7 +24,7 @@ class GJSS:
     @staticmethod
     def gen_h(msg, r):
         payload = [f'{msg}{str(r)}']
-        return string_to_point_FQ2(call_node("msis.js", payload))
+        return string_to_point_FQ2(call_node("./schemas/protocols/hash_map_g2.js", payload))
     
     @staticmethod
     def compute_h_key(h, x):

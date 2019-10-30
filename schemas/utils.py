@@ -1,9 +1,10 @@
 import subprocess
 import secrets
+from uuid import uuid4
 from py_ecc.fields import bls12_381_FQ as FQ, bls12_381_FQ2 as FQ2
 
 def generate_token():
-    return secrets.token_urlsafe(32)
+    return str(uuid4())
 
 def point_to_string_FQ(point):
     return str(point[0]) + " " + str(point[1])

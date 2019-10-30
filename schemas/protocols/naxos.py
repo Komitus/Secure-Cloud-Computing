@@ -1,7 +1,7 @@
 import secrets
 from py_ecc import bls12_381 as bls
 from hashlib import sha3_512
-from utils import point_to_string_FQ
+from schemas.utils import point_to_string_FQ
 from base64 import b64encode
 
 class NAXOS:

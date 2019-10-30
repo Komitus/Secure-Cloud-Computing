@@ -1,6 +1,7 @@
 from py_ecc import bls12_381 as bls
 from py_ecc.fields import bls12_381_FQ as FQ
 import secrets
+
 class OIS:
     g1 = bls.G1
     g2 = (
