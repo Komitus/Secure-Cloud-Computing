@@ -7,7 +7,10 @@ bp = Blueprint("protocols", __name__)
 @bp.route("/")
 def index():
     current_app.logger.info(f'Implemented protocols: {str(implemented_protocols)}')
-    return jsonify(implemented_protocols)
+    return jsonify({
+        "schemas" : implemented_protocols
+        })
+
 
 from .sis import routes as sis_routes
 from .ois import routes as ois_routes

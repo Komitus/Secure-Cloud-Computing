@@ -2,8 +2,12 @@ import click
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask.cli import with_appcontext
+from flask import request
 import os
 import logging
+import json
+from schemas.cryptoboxs import Salsa
+from schemas.utils import read_key, base64_encode, base64_decode
 
 db = SQLAlchemy()
 
@@ -42,8 +46,38 @@ def create_app(test_config=None):
     configure_logging() 
 
     from schemas.routes import bp 
+    key = read_key("salsa_key.bin")
+    salsabox = Salsa(key)
+
+    @app.before_request
+    def before():
+        if "salsa" in request.base_url:
+            if request.data:
+                d = request.json
+                ciphertext = d.get("ciphertext")
+                nonce =  d.get("nonce")
+                req_cipher = base64_decode(ciphertext)
+                req_nonce = base64_decode(nonce)
+                enc_json = salsabox.decrypt(req_cipher, req_nonce)
+                data = json.loads(enc_json.decode("utf-8"))
+                request.data = data
+            
+
+    @app.after_request
+    def after(response):
+        if "salsa" in request.base_url:
+            cipher, nonce = salsabox.encrypt(response.get_data())
+            salsa_json = {
+                "ciphertext": str(base64_encode(cipher), "utf-8"),
+                "nonce": str(base64_encode(nonce), "utf-8"),
+            }
+            response.set_data(json.dumps(salsa_json))
+            app.logger.info(f'Response: {response.get_data()}')
+        return response
+        
 
     app.register_blueprint(bp, url_prefix='/protocols')
+    app.register_blueprint(bp, url_prefix='/salsa/protocols')
 
     return app
 

@@ -16,7 +16,10 @@ def naxos_pkey():
     })
 
 def naxos_exchange():
-    data = request.json
+    if request.data and type(request.data) is dict:
+        data = request.data
+    else:
+        data = request.json
     if data.get("protocol_name") == PROTOCOL:
         payload = data.get("payload")
         current_app.logger.info(f"[NAXOS] Received payload:\n{pformat(payload)}")

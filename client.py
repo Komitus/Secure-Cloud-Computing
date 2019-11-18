@@ -1,14 +1,32 @@
 import argparse
-
 import requests
+import json
 from py_ecc import bls12_381 as bls
-
+from schemas.cryptoboxs import Salsa
 from schemas.protocols import BLSSS, MSIS, OIS, SIS, GJSS, NAXOS, SSS
-from schemas.utils import point_to_string_FQ, point_to_string_FQ2, string_to_point_FQ
+from schemas.utils import point_to_string_FQ, point_to_string_FQ2, string_to_point_FQ, read_key, base64_decode, base64_encode
 
 implemented_protocols = ["sis", "ois", "sss", "msis", "blsss", "gjss", "naxos"]
+salsa_key = read_key("salsa_key.bin")
+salsabox = Salsa(salsa_key)
 
-def schnorr_is(url):
+def salsa_ecrypt_json(js):
+    bin_json = json.dumps(js).encode('utf-8')
+    cipher, nonce = salsabox.encrypt(bin_json)
+    salsa_json = {
+            "ciphertext": str(base64_encode(cipher), "utf-8"),
+            "nonce": str(base64_encode(nonce), "utf-8"),
+        }
+    return salsa_json
+
+def salsa_decrypt_json(enc_data):
+    res_cipher = base64_decode(enc_data.get("ciphertext"))
+    res_nonce = base64_decode(enc_data.get("nonce"))
+    enc_json = salsabox.decrypt(res_cipher, res_nonce)
+    data = json.loads(enc_json.decode("utf-8"))
+    return data
+
+def schnorr_is(url, cipher):
     sk, pk = SIS.keygen()
     x, big_x = SIS.gen_commit()
     init_json = {
@@ -18,8 +36,14 @@ def schnorr_is(url):
             "X": point_to_string_FQ(big_x),
         }
     }
-    res = requests.post(url=url + "/protocols/sis/init", json=init_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(init_json)
+        res = requests.post(url=url + "/salsa/protocols/sis/init", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/sis/init", json=init_json)
+        data = res.json()
     c = int(data.get("payload").get("c"))
     token = data.get("session_token")
     s = SIS.calc_proof(sk, x, c)
@@ -30,11 +54,17 @@ def schnorr_is(url):
             "s": str(s)
         }
     }
-    res = requests.post(url=url + "/protocols/sis/verify", json=verify_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(verify_json)
+        res = requests.post(url=url + "/salsa/protocols/sis/verify", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/sis/verify", json=verify_json)
+        data = res.json()
     print(data)
 
-def okamoto_is(url):
+def okamoto_is(url, cipher):
     sk, pk = OIS.keygen()
     x, big_x = OIS.gen_commit()
     init_json = {
@@ -44,8 +74,14 @@ def okamoto_is(url):
             "X": point_to_string_FQ(big_x),
         }
     }
-    res = requests.post(url=url + "/protocols/ois/init", json=init_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(init_json)
+        res = requests.post(url=url + "/salsa/protocols/ois/init", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/ois/init", json=init_json)
+        data = res.json()
     c = int(data.get("payload").get("c"))
     token = data.get("session_token")
     s = OIS.calc_proof(sk, x, c)
@@ -57,11 +93,17 @@ def okamoto_is(url):
             "s2": str(s[1]),
         }
     }
-    res = requests.post(url=url + "/protocols/ois/verify", json=verify_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(verify_json)
+        res = requests.post(url=url + "/salsa/protocols/ois/verify", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/ois/verify", json=verify_json)
+        data = res.json()
     print(data)
 
-def schnorr_ss(url):
+def schnorr_ss(url, cipher):
     message = "Test"
     sk, pk = SSS.keygen()
     x, big_x = SSS.gen_commit()
@@ -76,11 +118,17 @@ def schnorr_ss(url):
             "msg": message
         }
     }
-    res = requests.post(url=url + "/protocols/sss/verify", json=verify_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(verify_json)
+        res = requests.post(url=url + "/salsa/protocols/sss/verify", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/sss/verify", json=verify_json)
+        data = res.json()
     print(data)
 
-def mod_schnorr_is(url):
+def mod_schnorr_is(url, cipher):
     sk, pk = MSIS.keygen()
     x, big_x = MSIS.gen_commit()
     init_json = {
@@ -90,8 +138,14 @@ def mod_schnorr_is(url):
             "X": point_to_string_FQ(big_x),
         }
     }
-    res = requests.post(url=url + "/protocols/msis/init", json=init_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(init_json)
+        res = requests.post(url=url + "/salsa/protocols/msis/init", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/msis/init", json=init_json)
+        data = res.json()
     c = int(data.get("payload").get("c"))
     token = data.get("session_token")
     g_hat = MSIS.gen_g2_generator(big_x, c)
@@ -103,11 +157,17 @@ def mod_schnorr_is(url):
             "S": point_to_string_FQ2(S)
         }
     }
-    res = requests.post(url=url + "/protocols/msis/verify", json=verify_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(verify_json)
+        res = requests.post(url=url + "/salsa/protocols/msis/verify", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/msis/verify", json=verify_json)
+        data = res.json()
     print(data)
 
-def bls_ss(url):
+def bls_ss(url, cipher):
     message = "Test"
     sk, pk = BLSSS.keygen()
     h = BLSSS.gen_g2_generator(message)
@@ -120,12 +180,18 @@ def bls_ss(url):
             "msg": message
         }
     }
-    res = requests.post(url=url + "/protocols/blsss/verify", json=verify_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(verify_json)
+        res = requests.post(url=url + "/salsa/protocols/blsss/verify", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/blsss/verify", json=verify_json)
+        data = res.json()
     print(data)
 
-def gj_ss(url):
-    message = "Test"
+def gj_ss(url, cipher):
+    message = "message"
     sk, pk = GJSS.keygen()
     r = GJSS.gen_random(111)
     h = GJSS.gen_h(message, r)
@@ -146,16 +212,27 @@ def gj_ss(url):
             "msg": message
         }
     }
-    res = requests.post(url=url + "/protocols/gjss/verify", json=verify_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(verify_json)
+        res = requests.post(url=url + "/salsa/protocols/gjss/verify", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/gjss/verify", json=verify_json)
+        data = res.json()
     print(data)
     
-def naxos_ake(url):
+def naxos_ake(url, cipher):
     message = "Test"
     sk, pk = NAXOS.keygen()
     ephemeral = NAXOS.gen_ephemeral(128)
-    res = requests.get(url=url + "/protocols/naxos/pkey")
-    data = res.json()
+    if cipher == "salsa":
+        res = requests.get(url=url + "/salsa/protocols/naxos/pkey")
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.get(url=url + "/protocols/naxos/pkey")
+        data = res.json()
     pk_b = string_to_point_FQ(data.get("B"))
     X = NAXOS.calc_commit(ephemeral, sk)
     exchange_json = {
@@ -166,8 +243,14 @@ def naxos_ake(url):
             "msg" : message 
         }
     }
-    res = requests.post(url=url + "/protocols/naxos/exchange", json=exchange_json)
-    data = res.json()
+    if cipher == "salsa":
+        salsa_json = salsa_ecrypt_json(exchange_json)
+        res = requests.post(url=url + "/salsa/protocols/naxos/exchange", json=salsa_json)
+        enc_data = res.json()
+        data = salsa_decrypt_json(enc_data)
+    else:
+        res = requests.post(url=url + "/protocols/naxos/exchange", json=exchange_json)
+        data = res.json()
     Y = string_to_point_FQ(data.get("Y"))
     enc_msg = data.get("msg")
     K = NAXOS.calc_keyA(Y, sk, pk_b, ephemeral, pk)
@@ -178,6 +261,7 @@ def parse_arg():
     parser = argparse.ArgumentParser()
     parser.add_argument("--p", dest="protocol", choices=implemented_protocols, required=True)
     parser.add_argument("--u", dest="url", required=True)
+    parser.add_argument("--c", dest="cipher", choices=["salsa", "chacha"], default=None)
     return parser.parse_args()
 
 protocols = {
@@ -192,7 +276,7 @@ protocols = {
 
 def main():
     arguments = parse_arg()
-    protocols[arguments.protocol](arguments.url)
+    protocols[arguments.protocol](arguments.url, arguments.cipher)
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,11 @@ PROTOCOL = "ois"
 routes = []
 
 def ois_init():
-    data = request.json
+    if request.data and type(request.data) is dict:
+        data = request.data
+    else:
+        data = request.json
+    current_app.logger.info(f"{data.get('alt')}")
     if data.get("protocol_name") == PROTOCOL:
         payload = data.get("payload")
         current_app.logger.info(f"[OIS] Received payload:\n{pformat(payload)}")
@@ -46,7 +50,10 @@ routes.append(dict(
     options=dict(methods=['POST'])))
 
 def ois_verify():
-    data = request.json
+    if request.data and type(request.data) is dict:
+        data = request.data
+    else:
+        data = request.json
     if data.get("protocol_name") == PROTOCOL:
         payload = data.get("payload")
         token = data.get("session_token")

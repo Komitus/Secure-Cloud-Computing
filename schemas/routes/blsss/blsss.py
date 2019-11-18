@@ -10,7 +10,10 @@ routes = []
 
 
 def blsss_verify():
-    data = request.json
+    if request.data and type(request.data) is dict:
+        data = request.data
+    else:
+        data = request.json
     if data.get("protocol_name") == PROTOCOL:
         payload = data.get("payload")
         msg = payload.get("msg")

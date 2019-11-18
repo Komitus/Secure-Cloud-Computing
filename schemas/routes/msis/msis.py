@@ -9,7 +9,10 @@ PROTOCOL = "msis"
 routes = []
 
 def msis_init():
-    data = request.json
+    if request.data and type(request.data) is dict:
+        data = request.data
+    else:
+        data = request.json
     if data.get("protocol_name") == PROTOCOL:
         payload = data.get("payload")
         current_app.logger.info(f"[MSIS] Received payload:\n{pformat(payload)}")
@@ -46,7 +49,10 @@ routes.append(dict(
     options=dict(methods=['POST'])))
 
 def msis_verify():
-    data = request.json
+    if request.data and type(request.data) is dict:
+        data = request.data
+    else:
+        data = request.json
     if data.get("protocol_name") == PROTOCOL:
         payload = data.get("payload")
         token = data.get("session_token")

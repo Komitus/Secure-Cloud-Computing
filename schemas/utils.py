@@ -2,6 +2,7 @@ import subprocess
 import secrets
 from uuid import uuid4
 from py_ecc.fields import bls12_381_FQ as FQ, bls12_381_FQ2 as FQ2
+from base64 import b64decode, b64encode
 
 def generate_token():
     return str(uuid4())
@@ -31,3 +32,14 @@ def call_node(filename, payload):
     
     a = subprocess.run(params, capture_output=True)
     return a.stdout.decode().strip("\n")
+
+def read_key(key_name):
+    with open(f"./schemas/{key_name}", "rb") as f:
+        key = f.read()
+        return key
+
+def base64_encode(message):
+    return b64encode(message)
+
+def base64_decode(b64):
+    return b64decode(b64)
