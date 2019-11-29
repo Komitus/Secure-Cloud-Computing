@@ -6,7 +6,7 @@ from flask import request
 import os
 import logging
 import json
-from schemas.cryptoboxs import Salsa
+from schemas.cryptoboxs import Salsa, Chacha
 from schemas.utils import read_key, base64_encode, base64_decode
 
 db = SQLAlchemy()
@@ -46,9 +46,10 @@ def create_app(test_config=None):
     configure_logging() 
 
     from schemas.routes import bp 
-    key = read_key("salsa_key.bin")
-    salsabox = Salsa(key)
-
+    salsa_key = read_key("salsa_key.bin")
+    salsabox = Salsa(salsa_key)
+    chacha_key = read_key("chacha_key.bin")
+    chachabox = Chacha(chacha_key)
     @app.before_request
     def before():
         if "salsa" in request.base_url:
@@ -59,25 +60,46 @@ def create_app(test_config=None):
                 req_cipher = base64_decode(ciphertext)
                 req_nonce = base64_decode(nonce)
                 enc_json = salsabox.decrypt(req_cipher, req_nonce)
-                data = json.loads(enc_json.decode("utf-8"))
+                data = json.loads(enc_json.decode())
                 request.data = data
-            
-
+        elif "chacha" in request.base_url:
+            if request.data:
+                d = request.json
+                ciphertext = d.get("ciphertext")
+                tag = d.get("tag")
+                nonce =  d.get("nonce")
+                req_cipher = base64_decode(ciphertext)
+                req_nonce = base64_decode(nonce)
+                req_tag = base64_decode(tag)
+                enc_json = chachabox.decrypt(req_cipher, req_tag ,req_nonce)
+                data = json.loads(enc_json.decode())
+                request.data = data
+                
     @app.after_request
     def after(response):
         if "salsa" in request.base_url:
             cipher, nonce = salsabox.encrypt(response.get_data())
             salsa_json = {
-                "ciphertext": str(base64_encode(cipher), "utf-8"),
-                "nonce": str(base64_encode(nonce), "utf-8"),
+                "ciphertext": base64_encode(cipher).decode("utf-8"),
+                "nonce": base64_encode(nonce).decode("utf-8"),
             }
             response.set_data(json.dumps(salsa_json))
+            app.logger.info(f'Response: {response.get_data()}')
+        elif "chacha" in request.base_url:
+            cipher, tag, nonce = chachabox.encrypt(response.get_data())
+            chacha_json = {
+                "ciphertext": base64_encode(cipher).decode("utf-8"),
+                "tag": base64_encode(tag).decode("utf-8"),
+                "nonce": base64_encode(nonce).decode("utf-8"),
+            }
+            response.set_data(json.dumps(chacha_json))
             app.logger.info(f'Response: {response.get_data()}')
         return response
         
 
     app.register_blueprint(bp, url_prefix='/protocols')
     app.register_blueprint(bp, url_prefix='/salsa/protocols')
+    app.register_blueprint(bp, url_prefix='/chacha/protocols')
 
     return app
 

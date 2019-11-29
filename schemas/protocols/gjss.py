@@ -4,7 +4,7 @@ from hashlib import sha3_512
 from py_ecc import bls12_381 as bls
 
 from schemas.utils import (call_node, point_to_string_FQ, point_to_string_FQ2,
-                   string_to_point_FQ2)
+                   string_to_point_FQ2, string_to_point_FQ)
 
 
 class GJSS:
@@ -24,7 +24,7 @@ class GJSS:
     @staticmethod
     def gen_h(msg, r):
         payload = [f'{msg}{str(r)}']
-        return string_to_point_FQ2(call_node("./schemas/protocols/hash_map_g2.js", payload))
+        return string_to_point_FQ(call_node("./schemas/protocols/hash_map_g1.js", payload))
     
     @staticmethod
     def compute_h_key(h, x):
@@ -40,11 +40,11 @@ class GJSS:
     @staticmethod
     def gen_challenge(h, Y, z, u, v):
         g_str = point_to_string_FQ(GJSS.g)
-        h_str = point_to_string_FQ2(h)
+        h_str = point_to_string_FQ(h)
         Y_str = point_to_string_FQ(Y)
-        z_str = point_to_string_FQ2(z)
+        z_str = point_to_string_FQ(z)
         u_str = point_to_string_FQ(u)
-        v_str = point_to_string_FQ2(v)
+        v_str = point_to_string_FQ(v)
         points = g_str + h_str + Y_str + z_str + u_str + v_str
         return int(sha3_512((points).encode()).hexdigest(),16) % GJSS.q
 

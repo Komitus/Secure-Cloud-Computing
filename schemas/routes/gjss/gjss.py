@@ -23,7 +23,7 @@ def gjss_verify():
         s = int(sigma.get("s"))
         c = int(sigma.get("c"))
         r = int(sigma.get("r"))
-        z = string_to_point_FQ2(sigma.get("z"))
+        z = string_to_point_FQ(sigma.get("z"))
         h = GJSS.gen_h(msg, r)
         current_app.logger.info(f"[GJSS] Generated h:\n{pformat(h)}")
         u, v = GJSS.calc_commits(s, c, z, h, A)

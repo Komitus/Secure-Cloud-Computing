@@ -49,5 +49,5 @@ class NAXOS:
 
     @staticmethod
     def encode_msg(msg, K):
-        return str(b64encode(K + msg.encode()))
+        return b64encode(sha3_512(K + msg.encode()).digest()).decode("utf-8")
         
