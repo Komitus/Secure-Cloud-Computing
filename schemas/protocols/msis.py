@@ -1,21 +1,21 @@
-from py_ecc import bls12_381 as bls
+from bls_py import ec as bls
+from bls_py.pairing import ate_pairing as e
 import secrets
 from schemas.utils import call_node, point_to_string_FQ, string_to_point_FQ2
 class MSIS:
-    g = bls.G1
-    q = bls.curve_order
-
+    g = bls.generator_Fq()
+    q = bls.bls12381.n
     
     @staticmethod
     def keygen():
         sk = secrets.randbelow(MSIS.q)
-        pk = bls.multiply(MSIS.g,sk)
+        pk = MSIS.g * sk
         return (sk, pk)    
     
     @staticmethod
     def gen_commit():
         x = secrets.randbelow(MSIS.q)
-        big_X = bls.multiply(MSIS.g,x)
+        big_X = MSIS.g * x
         return (x, big_X)
 
     @staticmethod
@@ -31,9 +31,9 @@ class MSIS:
     @staticmethod
     def calc_proof(g_hat, a, x, c):
         s = (x + a * c) % MSIS.q
-        S = bls.multiply(g_hat, s)
+        S = g_hat * s
         return S
 
     @staticmethod
     def verify(A, X, c, g_hat, S):
-        return bls.pairing(S, MSIS.g) == bls.pairing(g_hat, bls.add(X, bls.multiply(A, c)))
+        return e(MSIS.g, S) == e(X + (A * c), g_hat)

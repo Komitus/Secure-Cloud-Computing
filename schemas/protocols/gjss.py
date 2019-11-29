@@ -1,20 +1,18 @@
 import secrets
 from hashlib import sha3_512
-
-from py_ecc import bls12_381 as bls
-
+from bls_py import ec as bls
 from schemas.utils import (call_node, point_to_string_FQ, point_to_string_FQ2,
                    string_to_point_FQ2, string_to_point_FQ)
 
 
 class GJSS:
-    g = bls.G1
-    q = bls.curve_order
+    g = bls.generator_Fq()
+    q = bls.bls12381.n
 
     @staticmethod
     def keygen():
         sk = secrets.randbelow(GJSS.q)
-        pk = bls.multiply(GJSS.g, sk)
+        pk = GJSS.g * sk
         return (sk, pk)
 
     @staticmethod
@@ -28,13 +26,13 @@ class GJSS:
     
     @staticmethod
     def compute_h_key(h, x):
-        return bls.multiply(h, x)
+        return h * x
     
     @staticmethod
     def gen_commit(h):
         k = secrets.randbelow(GJSS.q)
-        u = bls.multiply(GJSS.g, k)
-        v = bls.multiply(h, k)
+        u = GJSS.g * k
+        v = h * k
         return (k, u, v)
 
     @staticmethod
@@ -54,8 +52,8 @@ class GJSS:
 
     @staticmethod
     def calc_commits(s, c, z, h, y):
-        u  = bls.add(bls.multiply(GJSS.g, s), bls.neg(bls.multiply(y, c)))
-        v  = bls.add(bls.multiply(h, s), bls.neg(bls.multiply(z, c)))
+        u = (GJSS.g * s) - (y * c)
+        v  = (h * s) - (z * c)
         return (u, v)
     
     @staticmethod

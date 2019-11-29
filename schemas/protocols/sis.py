@@ -1,9 +1,21 @@
-from py_ecc import bls12_381 as bls
+from bls_py import ec as bls
 import secrets
 
 class SIS:
-    g = bls.G1
-    q = bls.curve_order
+    g = bls.generator_Fq()
+    q = bls.bls12381.n
+
+    @staticmethod
+    def keygen():
+        sk = secrets.randbelow(SIS.q)
+        pk = SIS.g * sk
+        return (sk, pk)    
+    
+    @staticmethod
+    def gen_commit():
+        x = secrets.randbelow(SIS.q)
+        big_X = SIS.g * x
+        return (x, big_X)
 
     @staticmethod
     def gen_challenge():
@@ -11,19 +23,7 @@ class SIS:
 
     @staticmethod
     def verify(A, X, c, s):
-        return bls.multiply(SIS.g,s) == bls.add(X,bls.multiply(A,c))
-
-    @staticmethod
-    def keygen():
-        sk = secrets.randbelow(SIS.q)
-        pk = bls.multiply(SIS.g,sk)
-        return (sk, pk)    
-    
-    @staticmethod
-    def gen_commit():
-        x = secrets.randbelow(SIS.q)
-        big_X = bls.multiply(SIS.g,x)
-        return (x, big_X)
+        return SIS.g * s  == X + (A * c)
 
     @staticmethod
     def calc_proof(a, x, c):
