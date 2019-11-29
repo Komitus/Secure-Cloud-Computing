@@ -3,10 +3,10 @@ import requests
 import json
 from py_ecc import bls12_381 as bls
 from schemas.cryptoboxs import Salsa, Chacha
-from schemas.protocols import BLSSS, MSIS, OIS, SIS, GJSS, NAXOS, SSS
+from schemas.protocols import BLSSS, MSIS, OIS, SIS, GJSS, NAXOS, SSS, SIGMA
 from schemas.utils import point_to_string_FQ, point_to_string_FQ2, string_to_point_FQ, read_key, base64_decode, base64_encode
 
-implemented_protocols = ["all", "sis", "ois", "sss", "msis", "blsss", "gjss", "naxos"]
+implemented_protocols = ["all", "sis", "ois", "sss", "msis", "blsss", "gjss", "naxos", "sigma"]
 salsa_key = read_key("salsa_key.bin")
 salsabox = Salsa(salsa_key)
 chacha_key = read_key("chacha_key.bin")
@@ -228,6 +228,56 @@ def naxos_ake(url, cipher):
     m = NAXOS.encode_msg(message, K)
     print(enc_msg == m)
 
+def sigma_ake(url, cipher):
+    message = "Test"
+    sk, pk = SIGMA.keygen()
+    x, X = SIGMA.gen_commit()
+    init_json = {
+        "protocol_name": "sigma",
+        "payload": {
+            "X": point_to_string_FQ(X),
+        }
+    }
+    init_data = post_stage(url, cipher, "sigma", init_json, "init")
+    token = init_data.get("session_token")
+    payload = init_data.get("payload")
+    pk_b = string_to_point_FQ(payload.get("B"))
+    Y = string_to_point_FQ(payload.get("Y"))
+    b_mac = payload.get("b_mac")
+    sig_b = payload.get("sig")
+    if sig_b.get("msg") is not None:
+        sign_msg = sig_b.get("msg")
+    else:
+        sign_msg = point_to_string_FQ(X) + point_to_string_FQ(Y)
+    sign_X = string_to_point_FQ(sig_b.get("A"))
+    sign_s = int(sig_b.get("s"))
+    if SIGMA.verify_signature(pk_b, sign_X, sign_s, sign_msg):
+        mac_key = SIGMA.gen_mac_key(Y * x)
+        if(SIGMA.verify_mac(mac_key, point_to_string_FQ(pk_b), b_mac)):
+            signature = SIGMA.sign_message(sk, sign_msg)
+            mac = SIGMA.auth_message(mac_key, point_to_string_FQ(pk))
+            exchange_json = {
+                "protocol_name": "sigma",
+                "session_token": token,
+                "payload": {
+                    "b_mac": mac,
+                    "A": point_to_string_FQ(pk),
+                    "msg": message,
+                    "sig": {
+                        "A": point_to_string_FQ(signature[0]),
+                        "s": str(signature[1]),
+                        "msg": sign_msg
+                    }
+                }
+            }
+            data = post_stage(url, cipher, "sigma", exchange_json, "exchange")
+            enc_msg = data.get("msg")
+            K = SIGMA.gen_session_key(Y * x)
+            m = SIGMA.encode_msg(message, K)
+            print(enc_msg == m)
+
+
+
 def make_all(url, cipher):
     print("SIS")
     schnorr_is(url, cipher)
@@ -259,6 +309,7 @@ protocols = {
     "blsss": bls_ss,
     "gjss": gj_ss,
     "naxos": naxos_ake,
+    "sigma": sigma_ake,
     "all": make_all
 }
 
