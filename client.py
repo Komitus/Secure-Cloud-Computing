@@ -249,50 +249,47 @@ def sigma_ake(url, cipher):
         sign_msg = sig_b.get("msg")
     else:
         sign_msg = point_to_string_FQ(X) + point_to_string_FQ(Y)
-    sign_X = string_to_point_FQ(sig_b.get("A"))
+    sign_X = string_to_point_FQ(sig_b.get("X"))
     sign_s = int(sig_b.get("s"))
-    if SIGMA.verify_signature(pk_b, sign_X, sign_s, sign_msg):
-        mac_key = SIGMA.gen_mac_key(Y * x)
-        if(SIGMA.verify_mac(mac_key, point_to_string_FQ(pk_b), b_mac)):
-            signature = SIGMA.sign_message(sk, sign_msg)
-            mac = SIGMA.auth_message(mac_key, point_to_string_FQ(pk))
-            exchange_json = {
-                "protocol_name": "sigma",
-                "session_token": token,
-                "payload": {
-                    "b_mac": mac,
-                    "A": point_to_string_FQ(pk),
-                    "msg": message,
-                    "sig": {
-                        "A": point_to_string_FQ(signature[0]),
-                        "s": str(signature[1]),
-                        "msg": sign_msg
-                    }
-                }
+    assert(SIGMA.verify_signature(pk_b, sign_X, sign_s, sign_msg))
+    mac_key = SIGMA.gen_mac_key(Y * x)
+    assert(SIGMA.verify_mac(mac_key, point_to_string_FQ(pk_b), b_mac))
+    sign_a_msg = point_to_string_FQ(Y) + point_to_string_FQ(X)
+    signature = SIGMA.sign_message(sk, sign_a_msg)
+    mac = SIGMA.auth_message(mac_key, point_to_string_FQ(pk))
+    exchange_json = {
+        "protocol_name": "sigma",
+        "session_token": token,
+        "payload": {
+            "a_mac": mac,
+            "A": point_to_string_FQ(pk),
+            "msg": message,
+            "sig": {
+                "X": point_to_string_FQ(signature[0]),
+                "s": str(signature[1]),
+                "msg": sign_a_msg
             }
-            data = post_stage(url, cipher, "sigma", exchange_json, "exchange")
-            enc_msg = data.get("msg")
-            K = SIGMA.gen_session_key(Y * x)
-            m = SIGMA.encode_msg(message, K)
-            print(enc_msg == m)
+        }
+    }
+    data = post_stage(url, cipher, "sigma", exchange_json, "exchange")
+    enc_msg = data.get("msg")
+    K = SIGMA.gen_session_key(Y * x)
+    m = SIGMA.encode_msg(message, K)
+    print(enc_msg == m)
 
 
 
 def make_all(url, cipher):
-    print("SIS")
-    schnorr_is(url, cipher)
-    print("OIS")
-    okamoto_is(url, cipher)
-    print("SSS")
-    schnorr_ss(url, cipher)
-    print("MSIS")
-    mod_schnorr_is(url, cipher)
-    print("BLSSS")
-    bls_ss(url, cipher)
-    print("GJSS")
-    gj_ss(url, cipher)
-    print("NAXOS")
-    naxos_ake(url, cipher)
+    r = requests.get(url=url + "/protocols/")
+    data = r.json()
+    schemas = data.get("schemas")
+    for schema in schemas:
+        protocol = protocols.get(schema)
+        if protocol is not None:
+            print(schema.upper())
+            protocol(url, cipher)
+        else:
+            print(schema.upper(), "not implemented.")
 
 def parse_arg():
     parser = argparse.ArgumentParser()

@@ -9,6 +9,7 @@ DEBUG = True
 
 def main():
     app = create_app()
+    # app = app.run(host=HOST, port=8080)
     app.run(host=HOST, port=PORT, ssl_context=(f'{PATH}/fullchain.pem', f'{PATH}/privkey.pem'), debug=DEBUG)
 
 if __name__ == "__main__":

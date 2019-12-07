@@ -21,7 +21,7 @@ def sigma_init():
         X = string_to_point_FQ(X_str)
         y, Y = SIGMA.gen_commit()
         current_app.logger.info(f"[SIGMA] Generated Y:\n{pformat(Y)}")
-        sign_msg = X_str+point_to_string_FQ(Y)
+        sign_msg = X_str + point_to_string_FQ(Y)
         signature = SIGMA.sign_message(sigma_sk, sign_msg)
         current_app.logger.info(f"[SIGMA] Generated Signature:\n{pformat(signature)}")
         mac_key = SIGMA.gen_mac_key(X * y)
@@ -48,7 +48,7 @@ def sigma_init():
                 "B": point_to_string_FQ(sigma_pk),
                 "Y": point_to_string_FQ(Y),
                 "sig": {
-                    "A": point_to_string_FQ(signature[0]),
+                    "X": point_to_string_FQ(signature[0]),
                     "s": str(signature[1]),
                     "msg": sign_msg
                 }
@@ -84,25 +84,25 @@ def sigma_exchange():
             db.session.delete(session)
             db.session.commit()
         pk_a = string_to_point_FQ(payload.get("A"))
-        a_mac = payload.get("b_mac")
+        a_mac = payload.get("a_mac")
         sig_a = payload.get("sig")
         if sig_a.get("msg") is not None:
             sign_msg = sig_a.get("msg")
         else:
-            sign_msg = point_to_string_FQ(X) + point_to_string_FQ(Y)
-        sign_X = string_to_point_FQ(sig_a.get("A"))
+            sign_msg = point_to_string_FQ(Y) + point_to_string_FQ(X)
+        sign_X = string_to_point_FQ(sig_a.get("X"))
         sign_s = int(sig_a.get("s"))
-        if SIGMA.verify_signature(pk_a, sign_X, sign_s, sign_msg):
-            current_app.logger.info(f"[SIGMA] Verified signature")
-            mac_key = SIGMA.gen_mac_key(X * y)
-            if(SIGMA.verify_mac(mac_key, point_to_string_FQ(pk_a), a_mac)):
-                current_app.logger.info(f"[SIGMA] Verified MAC")
-                msg = payload.get("msg")
-                K = SIGMA.gen_session_key(X * y)
-                enc_msg = SIGMA.encode_msg(msg, K)
-                return jsonify({
-                    "msg": enc_msg
-                })
+        assert(SIGMA.verify_signature(pk_a, sign_X, sign_s, sign_msg))
+        current_app.logger.info(f"[SIGMA] Verified signature")
+        mac_key = SIGMA.gen_mac_key(X * y)
+        assert(SIGMA.verify_mac(mac_key, point_to_string_FQ(pk_a), a_mac))
+        current_app.logger.info(f"[SIGMA] Verified MAC")
+        msg = payload.get("msg")
+        K = SIGMA.gen_session_key(X * y)
+        enc_msg = SIGMA.encode_msg(msg, K)
+        return jsonify({
+            "msg": enc_msg
+        })
 
 routes.append(dict(
     rule='/sigma/exchange',
