@@ -1,6 +1,8 @@
 from mcl import *
 from .protocols_utils import *
-from schemas.protocols import Q
+
+_SEC_PAR = b"test"
+Q = G1.hashAndMapTo(_SEC_PAR)
 
 
 class OneOf2Cloud():

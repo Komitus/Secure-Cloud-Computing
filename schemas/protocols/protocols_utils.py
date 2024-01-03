@@ -31,7 +31,7 @@ def get_max_len_of_elem_in_list(_list: list[bytes]) -> int:
 
 
 _HASH_FUNC = sha3_512
-_HASH_LEN = _HASH_FUNC().digest_size
+HASH_LEN = _HASH_FUNC().digest_size
 
 
 def get_hash(msg: bytes):
@@ -39,7 +39,7 @@ def get_hash(msg: bytes):
 
 
 def _get_number_of_blocks(msg_len: int) -> int:
-    hash_len = _HASH_LEN
+    hash_len = HASH_LEN
     diff = msg_len - hash_len
     num_of_blocks = 1
     if diff > 0:
