@@ -1,8 +1,11 @@
 import argparse
-from schemas.client_apps.client_one_of_two import one_of_two
-from schemas.client_apps.client_one_of_n import one_of_n
+from client_apps.client_one_of_two import one_of_two
+from client_apps.client_one_of_n import one_of_n
 
-implemented_protocols = ["one_of_two", "one_of_n"]
+implemented_protocols = [
+    "one_of_two",
+    "one_of_n"
+]
 
 
 def parse_arg():

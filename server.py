@@ -1,11 +1,7 @@
-import click
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask.cli import with_appcontext
+from db_model import db, init_db, init_db_command
 import os
 import logging
-
-db = SQLAlchemy()
 
 
 def configure_logging():
@@ -43,19 +39,21 @@ def create_app(test_config=None):
     app.cli.add_command(init_db_command)
     configure_logging()
 
-    from schemas.routes import bp
+    from routes import bp
     app.register_blueprint(bp, url_prefix='/protocols')
 
     return app
 
 
-def init_db():
-    db.drop_all()
-    db.create_all()
+HOST = "0.0.0.0"
+DEBUG = True
 
 
-@click.command("init-db")
-@with_appcontext
-def init_db_command():
-    """Clear existing data and create new tables."""
-    init_db()
+def main():
+    app = create_app()
+    app = app.run(host=HOST, port=8080, debug=DEBUG)
+    # app.run(host=HOST, port=PORT, debug=DEBUG)
+
+
+if __name__ == "__main__":
+    main()

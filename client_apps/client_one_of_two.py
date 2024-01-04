@@ -1,5 +1,5 @@
-from schemas.encoding_utils import *
-from schemas.protocols.protocol_one_of_two import OneOf2User
+from routes.encoding_utils import *
+from protocols.protocol_one_of_two import OneOf2User
 
 _CLIENT_IDX = 1
 

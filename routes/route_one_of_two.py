@@ -1,9 +1,8 @@
-from schemas import db
-from schemas.session import Session
+from db_model import Session, db
 from flask import request, current_app, jsonify
-from schemas.protocols.protocol_one_of_two import OneOf2Cloud
-from schemas.encoding_utils import *
-from schemas.protocols.protocols_utils import gen_example_messages
+from protocols import OneOf2Cloud
+from routes.encoding_utils import *
+from .encoding_utils import gen_example_messages
 from pprint import pformat
 
 PROTOCOL = "one_of_two"

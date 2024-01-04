@@ -1,10 +1,8 @@
-from schemas import db
-from schemas.session import Session, Keys
 from flask import request, current_app, jsonify
-from schemas.protocols.protocol_one_of_n import OneOfNCloud
-from schemas.protocols.protocol_one_of_two import OneOf2Cloud
-from schemas.encoding_utils import *
-from schemas.protocols.protocols_utils import gen_example_messages
+from db_model import db
+from db_model import Session, Keys
+from protocols import OneOfNCloud, OneOf2Cloud
+from routes.encoding_utils import *
 from pprint import pformat
 
 routes = []

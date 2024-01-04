@@ -1,8 +1,12 @@
-from .one_of_two import routes as one_of_two_routes
-from .one_of_n import routes as one_of_n_routes
 from flask import Blueprint, jsonify
 from flask import current_app
-implemented_protocols = ["one_of_two", "one_of_n"]
+from .route_one_of_two import routes as one_of_two_routes
+from .route_one_of_n import routes as one_of_n_routes
+
+implemented_protocols = [
+    "one_of_two",
+    "one_of_n"
+]
 
 bp = Blueprint("protocols", __name__)
 

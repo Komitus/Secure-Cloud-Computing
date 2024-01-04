@@ -52,8 +52,3 @@ def get_hash_concated_k_times(msg_len: int, key: bytes):
     int_len = num_of_blocks.bit_length()
     return b''.join(get_hash(key + idx.to_bytes(int_len, 'little'))
                     for idx in range(num_of_blocks))
-
-
-def gen_example_messages(no_of_msgs):
-    return [
-        f"Hello from cloud = {i}".encode('ascii') for i in range(no_of_msgs)]

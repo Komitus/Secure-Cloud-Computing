@@ -1,20 +1,11 @@
 import requests
 from uuid import uuid4
-from base64 import b64decode, b64encode
 import json
 import mcl
 
 
 def generate_token():
     return str(uuid4())
-
-
-def base64_encode(message):
-    return b64encode(message)
-
-
-def base64_decode(b64):
-    return b64decode(b64)
 
 
 def mcl_to_str(mcl):
@@ -66,3 +57,8 @@ def post_stage(url, protocol, dic, stage):
         url=f'{url}/protocols/{protocol}/{stage}', json=dic)
     data = res.json()
     return data
+
+
+def gen_example_messages(no_of_msgs):
+    return [
+        f"Hello from cloud = {i}".encode('ascii') for i in range(no_of_msgs)]
