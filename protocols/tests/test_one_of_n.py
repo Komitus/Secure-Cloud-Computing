@@ -1,4 +1,4 @@
-from protocols.protocol_one_of_n import OneOfNCloud, OneOfNUser
+from protocols import OneOfNCloud, OneOfNUser
 from .test_one_of_two import one_of_two_run_once
 from routes.encoding_utils import gen_example_messages
 

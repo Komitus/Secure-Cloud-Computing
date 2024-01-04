@@ -1,23 +1,26 @@
-from flask import request, current_app, jsonify
+from flask import request, current_app, jsonify, abort
 from db_model import db
 from db_model import Session, Keys
 from protocols import OneOfNCloud, OneOf2Cloud
+from routes.route_one_of_two import one_of_two_send_A, one_of_two_send_ciphertexts
 from routes.encoding_utils import *
 from pprint import pformat
 
 routes = []
+
+PROTOCOL_NAME = "one_of_n"
+
 
 _NUM_OF_MESSAGES = 10
 _MESSAGES = gen_example_messages(_NUM_OF_MESSAGES)
 
 
 def one_of_n_send_ciphertexts():
-    PROTOCOL = "one_of_n"
     if request.data and type(request.data) is dict:
         data = request.data
     else:
         data = request.json
-    if data.get("protocol_name") == PROTOCOL:
+    if data.get("protocol_name") == PROTOCOL_NAME:
         payload = data.get("payload")
         current_app.logger.info(
             f"[one_of_n] Received payload:\n{pformat(payload)}")
@@ -63,86 +66,37 @@ routes.append(dict(
 ##########################
 
 
-def one_of_n_send_A():
-    if request.data and type(request.data) is dict:
-        data = request.data
-    else:
-        data = request.json
-    if data.get("protocol_name") == "one_of_n":
-        payload = data.get("payload")
+def _messages_provider_func(data):
+    token = data.get("session_token")
+    key_idx = data.get("payload").get("key_idx")
+    session_data = Session.query.filter_by(session_token=token).first()
+    if session_data == None:
+        abort(404, "Session not found")
+    key_from_db = Keys.query.filter_by(
+        session_token=token, key_idx=key_idx).first()
+    messages = [bytes.fromhex(key_from_db.key0_val),
+                bytes.fromhex(key_from_db.key1_val)]
+
+    try:
+        db.session.delete(key_from_db)
+        db.session.commit()
+    except:
         current_app.logger.info(
-            f"[one_of_n] Received payload:\n{pformat(payload)}")
-        token = data.get("session_token")
-        a, big_a = OneOf2Cloud.keygen()
-        db_data = {
-            "a": mcl_to_str(a),
-            "A": mcl_to_str(big_a)
-        }
-        try:
-            db.session.add(Session(session_token=token, payload=db_data))
-            db.session.commit()
-        except:
-            db.create_all()
-            db.session.rollback()
-            current_app.logger.info(f"Bad session_token {token=}")
-        response = {
-            "payload": {
-                "A": mcl_to_str(big_a)
-            }
-        }
-        current_app.logger.info(f"[one_of_n] Sent response A : {big_a}")
-        return jsonify(response)
+            f"[one_of_n] cannot delete key\n{pformat(key_from_db)}")
+
+    return messages
 
 
 routes.append(dict(
     rule='/one_of_n/get_A',
-    view_func=one_of_n_send_A,
-    options=dict(methods=['POST'])))
-
-
-def one_of_n_send_two_ciphertexts():
-    if request.data and type(request.data) is dict:
-        data = request.data
-    else:
-        data = request.json
-    if data.get("protocol_name") == "one_of_n":
-        payload = data.get("payload")
-        big_b = mcl_from_str(payload.get("B"), mcl.G1)
-        token = data.get("session_token")
-        key_idx = data.get("payload").get("key_idx")
-        current_app.logger.info(f"[one_of_n] Received B:\n{pformat(big_b)}")
-        session_from_db = Session.query.filter_by(session_token=token).first()
-        if session_from_db == None:
-            return jsonify({})
-        key_from_db = Keys.query.filter_by(
-            session_token=token, key_idx=key_idx).first()
-        a = mcl_from_str(session_from_db.payload.get("a"), mcl.Fr)
-        big_a = mcl_from_str(session_from_db.payload.get("A"), mcl.G1)
-
-        messages = [bytes.fromhex(key_from_db.key0_val),
-                    bytes.fromhex(key_from_db.key1_val)]
-
-        ciphertexts = OneOf2Cloud.gen_ciphertexts(a, big_a, messages, big_b)
-
-        response = {
-            "payload": {
-                "ciphertexts": [cip.hex() for cip in ciphertexts]
-            }
-        }
-        try:
-            db.session.delete(session_from_db)
-            db.session.delete(key_from_db)
-            db.session.commit()
-        except:
-            db.create_all()
-            db.session.rollback()
-            db.session.delete(session_from_db)
-            db.session.delete(key_from_db)
-            db.session.commit()
-        return jsonify(response)
+    view_func=one_of_two_send_A(PROTOCOL_NAME),
+    options=dict(methods=['POST']),
+    endpoint="one_of_n_get_A"))
 
 
 routes.append(dict(
     rule='/one_of_n/get_two_ciphertexts',
-    view_func=one_of_n_send_two_ciphertexts,
-    options=dict(methods=['POST'])))
+    view_func=one_of_two_send_ciphertexts(
+        _messages_provider_func, PROTOCOL_NAME),
+    options=dict(methods=['POST']),
+    endpoint="one_of_n_get_two_ciphertexts"))

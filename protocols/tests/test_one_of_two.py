@@ -1,5 +1,5 @@
-from protocols.protocol_one_of_two import OneOf2Cloud, OneOf2User
-from protocols.protocols_utils import gen_example_messages
+from protocols import OneOf2Cloud, OneOf2User
+from routes.encoding_utils import gen_example_messages
 
 def test_one_of_two_run_simulation():
     messages = gen_example_messages(2)
