@@ -4,8 +4,10 @@ from protocols import OneOf2Cloud
 from routes.encoding_utils import *
 from .encoding_utils import gen_example_messages
 from pprint import pformat
+from globals import *
 
-PROTOCOL_NAME = "one_of_two"
+PROTOCOL_NAME = Protocols.ONE_OF_TWO.value
+PROTOCOL_ACTIONS = PROTOCOL_SPECS[PROTOCOL_NAME]["actions"]
 routes = []
 
 
@@ -96,13 +98,13 @@ def one_of_two_send_ciphertexts(messages_provider, protocol_name):
 
 
 routes.append(dict(
-    rule='/one_of_two/get_A',
+    rule=f'/{PROTOCOL_NAME}/{PROTOCOL_ACTIONS[0]}',
     view_func=one_of_two_send_A(PROTOCOL_NAME),
     options=dict(methods=['POST']),
     endpoint="one_of_two_get_A"))
 
 routes.append(dict(
-    rule='/one_of_two/get_ciphertexts',
+    rule=f'/{PROTOCOL_NAME}/{PROTOCOL_ACTIONS[1]}',
     view_func=one_of_two_send_ciphertexts(
         _message_provider_func, PROTOCOL_NAME),
     options=dict(methods=['POST']),

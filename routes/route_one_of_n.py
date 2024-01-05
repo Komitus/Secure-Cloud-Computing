@@ -5,11 +5,12 @@ from protocols import OneOfNCloud, OneOf2Cloud
 from routes.route_one_of_two import one_of_two_send_A, one_of_two_send_ciphertexts
 from routes.encoding_utils import *
 from pprint import pformat
+from globals import *
 
+
+PROTOCOL_NAME = Protocols.ONE_OF_N.value
+PROTOCOL_ACTIONS = PROTOCOL_SPECS[PROTOCOL_NAME]["actions"]
 routes = []
-
-PROTOCOL_NAME = "one_of_n"
-
 
 _NUM_OF_MESSAGES = 10
 _MESSAGES = gen_example_messages(_NUM_OF_MESSAGES)
@@ -55,17 +56,6 @@ def one_of_n_send_ciphertexts():
         return jsonify(response)
 
 
-routes.append(dict(
-    rule='/one_of_n/get_ciphertexts',
-    view_func=one_of_n_send_ciphertexts,
-    options=dict(methods=['POST'])))
-
-
-##########################
-# part with one of two
-##########################
-
-
 def _messages_provider_func(data):
     token = data.get("session_token")
     key_idx = data.get("payload").get("key_idx")
@@ -88,14 +78,20 @@ def _messages_provider_func(data):
 
 
 routes.append(dict(
-    rule='/one_of_n/get_A',
+    rule=f'/{PROTOCOL_NAME}/{PROTOCOL_ACTIONS[0]}',
+    view_func=one_of_n_send_ciphertexts,
+    options=dict(methods=['POST'])))
+
+
+routes.append(dict(
+    rule=f'/{PROTOCOL_NAME}/{PROTOCOL_ACTIONS[1]}',
     view_func=one_of_two_send_A(PROTOCOL_NAME),
     options=dict(methods=['POST']),
     endpoint="one_of_n_get_A"))
 
 
 routes.append(dict(
-    rule='/one_of_n/get_two_ciphertexts',
+    rule=f'/{PROTOCOL_NAME}/{PROTOCOL_ACTIONS[2]}',
     view_func=one_of_two_send_ciphertexts(
         _messages_provider_func, PROTOCOL_NAME),
     options=dict(methods=['POST']),
