@@ -4,6 +4,7 @@ from enum import Enum
 class Protocols(Enum):
     ONE_OF_TWO = 'one_of_two'
     ONE_OF_N = 'one_of_n'
+    OPE = 'ope'
 
     @classmethod
     def has_value(cls, value):
@@ -38,5 +39,13 @@ PROTOCOL_SPECS = {
         ],
         'init_action': 'get_ciphertexts',
         'close_action': 'done'
+    },
+    Protocols.OPE.value: {
+        'actions': [
+            'get_server_ephemerals',
+            'perform_n_of_big_n_ot',
+        ],
+        'init_action': 'get_server_ephemerals',
+        'close_action': 'perform_n_of_big_n_ot',
     }
 }

@@ -1,5 +1,6 @@
-from protocols.protocol_ope import OpeCloud, OpeUser
+from operator import itemgetter
 from mcl import Fr
+from protocols.protocol_ope import OpeCloud, OpeUser
 
 
 def test_ope():
@@ -14,5 +15,7 @@ def test_ope():
     tags = opeUser.generate_xy()
     assert opeUser.poly_s(zero) == alpha
     poly_q_values = opeCloud.generate_values_of_poly_q(tags)
-    real_val = opeUser.calculate_poly_r(poly_q_values)
+    choosen_poly_q_values = list(itemgetter(
+        *opeUser.subset_of_n_indices)(poly_q_values))
+    real_val = opeUser.calculate_poly_r(choosen_poly_q_values)
     assert expected_val == real_val

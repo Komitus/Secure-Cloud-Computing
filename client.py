@@ -1,10 +1,12 @@
 import argparse
 from client_apps.client_one_of_two import one_of_two
 from client_apps.client_one_of_n import one_of_n
+from client_apps.client_ope import ope_client
 
 implemented_protocols = [
     "one_of_two",
-    "one_of_n"
+    "one_of_n",
+    "ope"
 ]
 
 
@@ -19,6 +21,7 @@ def parse_arg():
 protocols = {
     "one_of_two": one_of_two,
     "one_of_n": one_of_n,
+    "ope": ope_client
 }
 
 

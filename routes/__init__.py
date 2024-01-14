@@ -2,10 +2,12 @@ from flask import Blueprint, jsonify
 from flask import current_app
 from .route_one_of_two import routes as one_of_two_routes
 from .route_one_of_n import routes as one_of_n_routes
+from .route_ope import routes as ope_routes
 
 implemented_protocols = [
     "one_of_two",
-    "one_of_n"
+    "one_of_n",
+    "ope"
 ]
 
 bp = Blueprint("protocols", __name__)
@@ -22,7 +24,8 @@ def index():
 
 routes = (
     one_of_two_routes +
-    one_of_n_routes
+    one_of_n_routes +
+    ope_routes
 )
 
 for r in routes:

@@ -18,6 +18,12 @@ def mcl_from_str(mcl_str: str, cls):
     return mcl
 
 
+def mcl_from_bytes(mcl_bytes: bytes, val_type):
+    mcl_val = val_type()
+    mcl_val.deserialize(mcl_bytes)
+    return mcl_val
+
+
 class mclEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, mcl.Fr) or\

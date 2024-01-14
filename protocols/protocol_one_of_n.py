@@ -11,7 +11,7 @@ class OneOfNCloud():
         self.bitlength = int.bit_length(self.num_of_messages)
         self._rand_gen = SystemRandom()
         self.MSG_LEN = len(max(messages, key=len))  # bytes
-        self.KEY_SIZE = HASH_LEN #len(get_hash(b"test"))
+        self.KEY_SIZE = HASH_LEN  # len(get_hash(b"test"))
         self.K_NUM = ceil((self.MSG_LEN) / self.KEY_SIZE)
         self.NUM_OF_BLOCKS = self.MSG_LEN + 1
 

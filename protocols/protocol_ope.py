@@ -8,9 +8,9 @@ from operator import itemgetter
 SEED_CLOUD_1 = "TEST1"
 SEED_CLOUD_2 = "TEST2"
 SEED_USER = "TEST3"
-DEG_POLY_P = 10
-SEC_PARAM_M = 5
-SEC_PARAM_K = 5
+DEG_POLY_P = 4
+SEC_PARAM_M = 2
+SEC_PARAM_K = 3
 SEC_PARAM_N = SEC_PARAM_K * DEG_POLY_P + 1
 SEC_PARAM_BIG_N = SEC_PARAM_N * SEC_PARAM_M
 
@@ -64,10 +64,8 @@ class OpeUser:
     def calculate_poly_r(self, poly_q_values):
         list_of_proper_xs = list(itemgetter(
             *self.subset_of_n_indices)(self.list_of_all_xs))
-        list_of_proper_poly_q_values = list(
-            itemgetter(*self.subset_of_n_indices)(poly_q_values))
         pairs_of_poly_q = [_ for _ in zip(
-            list_of_proper_xs, list_of_proper_poly_q_values)]
+            list_of_proper_xs, poly_q_values)]
         zero = Fr()
         zero.setInt(0)
         return Polynomial.lagrange_interpolation(zero, pairs_of_poly_q)
