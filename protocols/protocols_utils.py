@@ -9,13 +9,15 @@ def encrypt(message_bytes: bytes, key_bytes: bytes):
     assert len(message_bytes) <= len(
         key_bytes), f'{len(message_bytes)=}'
 
-    message_aligned = message_bytes.ljust(len(key_bytes), b"\x00")
-    return _xor_bytes(message_aligned, key_bytes)
+    encrypted = _xor_bytes(message_bytes, key_bytes)
+    decrypted = decrypt(encrypted, key_bytes)
+    assert decrypted == message_bytes, f"Decryption failed!"
+    return encrypted
 
 
 def decrypt(ciphertext_bytes: bytes, key_bytes: bytes):
     assert len(ciphertext_bytes) <= len(key_bytes), f'{len(ciphertext_bytes)=}'
-    return _xor_bytes(ciphertext_bytes, key_bytes).rstrip(b"\x00")
+    return _xor_bytes(ciphertext_bytes, key_bytes)
 
 
 def get_ith_bit(val: int, i: int):

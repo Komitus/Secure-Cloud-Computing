@@ -1,6 +1,7 @@
 from protocols import OneOf2Cloud, OneOf2User
 from routes.encoding_utils import gen_example_messages
 
+
 def test_one_of_two_run_simulation():
     messages = gen_example_messages(2)
     for idx in range(0, 2):
@@ -9,7 +10,7 @@ def test_one_of_two_run_simulation():
     print("PASSED")
 
 
-def one_of_two_run_once(messages, idx: int)-> bytes:
+def one_of_two_run_once(messages, idx: int) -> bytes:
     user = OneOf2User(idx)
     cloud = OneOf2Cloud()
     a, big_a = cloud.keygen()

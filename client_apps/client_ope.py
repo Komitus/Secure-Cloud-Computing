@@ -4,10 +4,12 @@ from protocols.protocol_ope import SEC_PARAM_BIG_N, SEC_PARAM_N
 from globals import *
 from mcl import Fr, G1
 
+ALPHA_VAL = 10
+
 
 def ope_client(url):
     alpha = Fr()
-    alpha.setInt(10)
+    alpha.setInt(ALPHA_VAL)
     _PROTOCOL_NAME = Protocols.OPE.value
     _PROTOCOL_ACTIONS = PROTOCOL_SPECS[_PROTOCOL_NAME]["actions"]
     payload_to_post = {
@@ -102,8 +104,7 @@ def ope_client(url):
         )
         print(f'Getting point number {needed_point_ciphertext_bytes=}')
 
-        one_of_n_user = OneOfNUser(ciphertext_idx, max_index_bit_len)
-        keys = []
+        one_of_n_user = OneOfNUser(ciphertext_idx, SEC_PARAM_BIG_N)
         print(f'{ciphertexts=}')
         for j in range(max_index_bit_len):
             ciphertexts_keys = resp_data['payload'][f'ciphertexts_{i}_{j}']
@@ -120,11 +121,10 @@ def ope_client(url):
             one_of_two_user._enc_key_bytes = enc_key
             decrypted_key = one_of_two_user.decrypt(ciphertexts_keys_bytes)
             # print(f'key{decrypted_key=}')
-            keys.append(decrypted_key)
+            one_of_n_user.add_key(j, decrypted_key)
 
         # Decrypt the individual point from ciphertexts
         # using the keys
-        one_of_n_user.keys = keys
         decrypted_point = one_of_n_user.decrypt(
             needed_point_ciphertext_bytes)
         interpolation_set.append(decrypted_point)
@@ -138,3 +138,4 @@ def ope_client(url):
         interpolation_set
     )
     print(f'Evaluation result: {result=}')
+    return result
