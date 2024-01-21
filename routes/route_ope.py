@@ -173,7 +173,7 @@ def perform_n_of_big_n_ot():
             db.session.commit()
         except:
             current_app.logger.info(
-                f"[one_of_n] cannot delete session data for {token=}")
+                f"[{PROTOCOL_NAME}] cannot delete session data for {token=}")
 
         return jsonify(response)
 

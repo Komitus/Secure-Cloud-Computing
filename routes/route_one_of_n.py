@@ -22,7 +22,7 @@ def one_of_n_send_ciphertexts(messages_provider, args_for_provider, protocol_nam
         if data.get("protocol_name") == protocol_name:
             payload = data.get("payload")
             current_app.logger.info(
-                f"[one_of_n] Received payload:\n{pformat(payload)}")
+                f"[{protocol_name}] Received payload:\n{pformat(payload)}")
             token = generate_token()
             messages = messages_provider(args_for_provider)
             cloud = OneOfNCloud(messages)
@@ -72,7 +72,7 @@ def _messages_provider_func_for_one_of_two(data):
         db.session.commit()
     except:
         current_app.logger.info(
-            f"[one_of_n] cannot delete key\n{pformat(key_from_db)}")
+            f"[{PROTOCOL_NAME}] cannot delete key\n{pformat(key_from_db)}")
 
     return messages
 

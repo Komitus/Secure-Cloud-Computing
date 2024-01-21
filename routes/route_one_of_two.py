@@ -24,7 +24,7 @@ def one_of_two_send_A(protocol_name):
         if data.get("protocol_name") == protocol_name:
             payload = data.get("payload")
             current_app.logger.info(
-                f"[one_of_two] Received payload:\n{pformat(payload)}")
+                f"[{protocol_name}] Received payload:\n{pformat(payload)}")
             a, big_a = OneOf2Cloud.keygen()
             if protocol_name == PROTOCOL_NAME:
                 token = generate_token()
@@ -68,7 +68,7 @@ def one_of_two_send_ciphertexts(messages_provider, protocol_name):
             big_b = mcl_from_str(payload.get("B"), mcl.G1)
             token = data.get("session_token")
             current_app.logger.info(
-                f"[one_of_two] Received B:\n{pformat(big_b)}")
+                f"[{protocol_name}] Received B:\n{pformat(big_b)}")
             session_data = Session.query.filter_by(session_token=token).first()
             a = mcl_from_str(session_data.payload.get("a"), mcl.Fr)
             big_a = mcl_from_str(session_data.payload.get("A"), mcl.G1)

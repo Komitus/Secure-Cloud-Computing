@@ -5,6 +5,7 @@ class Protocols(Enum):
     ONE_OF_TWO = 'one_of_two'
     ONE_OF_N = 'one_of_n'
     OPE = 'ope'
+    OT_CIRCUIT = "ot_circuit"
 
     @classmethod
     def has_value(cls, value):
@@ -47,5 +48,12 @@ PROTOCOL_SPECS = {
         ],
         'init_action': 'get_server_ephemerals',
         'close_action': 'perform_n_of_big_n_ot',
+    },
+    Protocols.OT_CIRCUIT.value: {
+        'actions': [
+            'get_cloud_ephemerals',
+            'get_encoded_values'
+        ],
+
     }
 }

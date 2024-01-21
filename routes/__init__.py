@@ -3,6 +3,7 @@ from flask import current_app
 from .route_one_of_two import routes as one_of_two_routes
 from .route_one_of_n import routes as one_of_n_routes
 from .route_ope import routes as ope_routes
+from .route_ot_circuit import routes as ot_circuit_routes
 
 implemented_protocols = [
     "one_of_two",
@@ -25,7 +26,8 @@ def index():
 routes = (
     one_of_two_routes +
     one_of_n_routes +
-    ope_routes
+    ope_routes +
+    ot_circuit_routes
 )
 
 for r in routes:
