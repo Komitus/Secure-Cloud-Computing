@@ -4,11 +4,13 @@ from .route_one_of_two import routes as one_of_two_routes
 from .route_one_of_n import routes as one_of_n_routes
 from .route_ope import routes as ope_routes
 from .route_ot_circuit import routes as ot_circuit_routes
+from .route_psi import routes as psi_routes
 
 implemented_protocols = [
     "one_of_two",
     "one_of_n",
-    "ope"
+    "ope",
+    "psi"
 ]
 
 bp = Blueprint("protocols", __name__)
@@ -27,7 +29,8 @@ routes = (
     one_of_two_routes +
     one_of_n_routes +
     ope_routes +
-    ot_circuit_routes
+    ot_circuit_routes +
+    psi_routes
 )
 
 for r in routes:

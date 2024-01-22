@@ -6,6 +6,7 @@ class Protocols(Enum):
     ONE_OF_N = 'one_of_n'
     OPE = 'ope'
     OT_CIRCUIT = "ot_circuit"
+    PSI = "psi"
 
     @classmethod
     def has_value(cls, value):
@@ -54,6 +55,13 @@ PROTOCOL_SPECS = {
             'get_cloud_ephemerals',
             'get_encoded_values'
         ],
-
+    },
+    Protocols.PSI.value: {
+        'actions': [
+            'get_a_t',
+            'done',
+        ],
+        'init_action': 'get_a_t',
+        'close_action': 'done'
     }
 }

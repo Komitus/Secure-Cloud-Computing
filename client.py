@@ -3,12 +3,14 @@ from client_apps.client_one_of_two import one_of_two
 from client_apps.client_one_of_n import one_of_n
 from client_apps.client_ope import ope_client
 from client_apps.client_ot_circuit import ot_circuit
+from client_apps.client_psi import psi
 
 implemented_protocols = [
     "one_of_two",
     "one_of_n",
     "ope",
-    "ot_circuit"
+    "ot_circuit",
+    "psi"
 ]
 
 
@@ -25,6 +27,7 @@ protocols = {
     "one_of_n": one_of_n,
     "ope": ope_client,
     "ot_circuit": ot_circuit,
+    "psi": psi
 }
 
 
